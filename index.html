@@ -468,9 +468,9 @@ async function runQuiz(ctrl){
     ?`Tu es un assistant pédagogique pour un élève de 6ème en France. Sujet : "${ctrl.theme}" — matière : ${s.n}. Génère UN QCM de révision niveau 6ème. RÈGLE STRICTE : question factuelle courte avec une seule bonne réponse (un mot, une date, un nom, une règle). INTERDIT : demander de rédiger un texte, une phrase ou une production écrite. UNIQUEMENT JSON valide sans markdown : {"notion":"Rappel de cours (2-3 phrases max, niveau 6ème)","question":"Question factuelle courte","options":["A. …","B. …","C. …","D. …"],"correct":0}`
     :`Tu es un assistant pédagogique pour un élève de 6ème en France. Sujet : "${ctrl.theme}" — matière : ${s.n}. Génère UNE question de révision où l élève réfléchit puis vérifie. RÈGLE STRICTE : jamais demander de rédiger un texte complet. La réponse doit être courte et vérifiable (quelques mots). Bon exemple : "Quelles sont les terminaisons du passé simple pour le 1er groupe ?" → réponse : "-ai, -as, -a, -âmes, -âtes, -èrent". Mauvais exemple interdit : "Écris un texte avec 3 verbes au passé simple". UNIQUEMENT JSON valide sans markdown : {"notion":"Rappel de cours (2-3 phrases max, niveau 6ème)","question":"Question claire et précise","answer":"Réponse courte et vérifiable"}`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/.netlify/functions/quiz',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({prompt})
     });
     const data=await res.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'';
