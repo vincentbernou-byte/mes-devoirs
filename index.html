@@ -468,9 +468,9 @@ async function runQuiz(ctrl){
     ?`Assistant pédagogique pour élève de 6ème en France (11-12 ans). Sujet: "${ctrl.theme}" — matière: ${s.n}. Génère UN QCM de révision niveau 6ème en français. UNIQUEMENT JSON valide sans markdown:\n{"notion":"Rappel de cours court et simple (2-3 phrases, niveau 6ème)","question":"La question","options":["A. …","B. …","C. …","D. …"],"correct":0}`
     :`Assistant pédagogique pour élève de 6ème en France. Sujet: "${ctrl.theme}" — matière: ${s.n}. Génère UNE question ouverte niveau 6ème en français. UNIQUEMENT JSON valide sans markdown:\n{"notion":"Rappel de cours court (2-3 phrases, niveau 6ème)","question":"La question ouverte","answer":"Réponse courte et claire"}`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/.netlify/functions/quiz',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({prompt})
     });
     const data=await res.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'';
