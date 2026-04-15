@@ -465,12 +465,12 @@ async function runQuiz(ctrl){
     <div class="spin"></div>
     <p style="text-align:center;color:var(--muted);font-size:13px">Génération de la question…</p>`;
   const prompt=isMCQ
-    ?`Assistant pédagogique pour élève de 6ème en France (11-12 ans). Sujet: "${ctrl.theme}" — matière: ${s.n}. Génère UN QCM de révision niveau 6ème en français. UNIQUEMENT JSON valide sans markdown:\n{"notion":"Rappel de cours court et simple (2-3 phrases, niveau 6ème)","question":"La question","options":["A. …","B. …","C. …","D. …"],"correct":0}`
-    :`Assistant pédagogique pour élève de 6ème en France. Sujet: "${ctrl.theme}" — matière: ${s.n}. Génère UNE question ouverte niveau 6ème en français. UNIQUEMENT JSON valide sans markdown:\n{"notion":"Rappel de cours court (2-3 phrases, niveau 6ème)","question":"La question ouverte","answer":"Réponse courte et claire"}`;
+    ?`Tu es un assistant pédagogique pour un élève de 6ème en France. Sujet : "${ctrl.theme}" — matière : ${s.n}. Génère UN QCM de révision niveau 6ème. RÈGLE STRICTE : question factuelle courte avec une seule bonne réponse (un mot, une date, un nom, une règle). INTERDIT : demander de rédiger un texte, une phrase ou une production écrite. UNIQUEMENT JSON valide sans markdown : {"notion":"Rappel de cours (2-3 phrases max, niveau 6ème)","question":"Question factuelle courte","options":["A. …","B. …","C. …","D. …"],"correct":0}`
+    :`Tu es un assistant pédagogique pour un élève de 6ème en France. Sujet : "${ctrl.theme}" — matière : ${s.n}. Génère UNE question de révision où l élève réfléchit puis vérifie. RÈGLE STRICTE : jamais demander de rédiger un texte complet. La réponse doit être courte et vérifiable (quelques mots). Bon exemple : "Quelles sont les terminaisons du passé simple pour le 1er groupe ?" → réponse : "-ai, -as, -a, -âmes, -âtes, -èrent". Mauvais exemple interdit : "Écris un texte avec 3 verbes au passé simple". UNIQUEMENT JSON valide sans markdown : {"notion":"Rappel de cours (2-3 phrases max, niveau 6ème)","question":"Question claire et précise","answer":"Réponse courte et vérifiable"}`;
   try{
-    const res=await fetch('/.netlify/functions/quiz',{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
     const data=await res.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'';
@@ -488,15 +488,16 @@ function showQuiz(ctrl,s,q,isMCQ){
   }else{
     qh=`<button class="rvbtn" id="rvb" onclick="reveal()">👁 Voir la réponse</button>
       <div class="abox" id="abox">✅ ${q.answer}</div>
+      <div class="notion" id="notion-box" style="display:none">💡 ${q.notion}</div>
       <button class="qnext" id="qnb" style="display:none" onclick="openQ('${id}')">Autre question ✨</button>`;
   }
   document.getElementById('sheet').innerHTML=`
     <div class="handle"></div>
     <span class="quiz-sbj ${s.cls}">${s.n}</span>
     <div class="quiz-th">${ctrl.theme}</div>
-    <div class="notion">💡 ${q.notion}</div>
     <div class="qtxt">${q.question}</div>
     ${qh}
+    <div class="notion" id="notion-box" style="display:none">💡 ${q.notion}</div>
     <button class="bc" onclick="closeSheet()" style="width:100%;margin-top:12px">Fermer</button>`;
 }
 function pick(ch,cor,id){
@@ -509,12 +510,16 @@ function pick(ch,cor,id){
     nb.className='qnext';nb.textContent='Autre question ✨';
     nb.onclick=()=>openQ(id);
     document.querySelector('.bc').before(nb);
+    const notion=document.getElementById('notion-box');
+    if(notion)notion.style.display='block';
   },400);
 }
 function reveal(){
   document.getElementById('abox').classList.add('show');
   document.getElementById('rvb').style.display='none';
   document.getElementById('qnb').style.display='block';
+  const notion=document.getElementById('notion-box');
+  if(notion)notion.style.display='block';
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
